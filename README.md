@@ -1,33 +1,29 @@
-# 8-Bit-Linear-Phase-FIR-Filter
+# 8-Bit Linear-Phase FIR Filter
 
-1. Adder architectures — from first principles to trade-off analysis
+## 1. Adder Architectures: First Principles to Trade-Off Analysis
+* **Full Adder:** Built from basic logic gates, deriving worst-case delay equations (T_sum, T_cout) for generated versus propagated carry to confirm the specific input patterns that trigger the true critical path.
+* **Ripple Carry Adder (RCA):** Derived the linear worst-case delay growth formula (n × T_carry) and identified the exact worst-case vector (11...1 + 00...01 + Cin=1). Connected these theoretical limits to real design consequences, such as the bit-width growth needed for overflow-free sums and the RCA's role as the final carry-propagate stage in multipliers.
+* **Carry Look-Ahead Adder (CLA):** Implemented as two cascaded 4-bit blocks rather than a single flat 8-bit block to actively avoid high-fanout generate/propagate logic, demonstrating a practical area/speed trade-off. Achieved a ~2x speedup over the RCA on identical worst-case inputs.
+* **Carry Save Adder (CSA):** Analyzed the conceptual split between carry-propagate and carry-save families. Extended CSA addition to three operands and derived the general k-operand CSA-tree delay formula: (k-2)T_CSA + T_CPA.
+* **Architecture Trade-Offs:** Established a concrete progression matrix: **RCA** (simple, slow, small) -> **CLA** (fast, increased area) -> **CSA** (fast multi-operand accumulation requiring a final CPA resolution).
 
-Full Adder: built from basic gates, then derived worst-case delay equations by hand (T_sum, T_cout for generated vs. propagated carry) and confirmed which input pattern triggers the true critical path.
-Ripple Carry Adder (RCA): derived that worst-case delay grows linearly with bit-width (n × T_carry), identified the exact worst-case vector (11...1 + 00...01 + Cin=1), and connected this to real design consequences — width growth needed for overflow-free sums, and RCA's use as the final carry-propagate stage inside multipliers.
-Carry Look-Ahead Adder (CLA): implemented as two cascaded 4-bit blocks (rather than one flat 8-bit block) specifically to avoid high-fanout generate/propagate logic — a real area/speed trade-off decision, not just a textbook one. Measured ~2x speedup over RCA on the same worst-case inputs.
-Carry Save Adder (CSA): understood the conceptual split between carry-propagate and carry-save adder families, extended CSA addition to 3 operands, and derived the general k-operand CSA-tree delay formula (k-2)T_CSA + T_CPA.
-End-to-end trade-off table in your head: RCA (simple, slow, small) → CLA (fast, more area) → CSA (fast multi-operand accumulation, needs a final CPA to resolve).
+## 2. Multiplier Design & Comparison
+* **Array Multiplier:** Constructed from a CSA chain and a final RCA, deriving total delay as a direct function of CSA stages and the final carry chain.
+* **Wallace Tree Multiplier:** Implemented column-reduction stages (using FAs/HAs down to 2 rows) and a fast adder for final row reduction. Mathematically derived how reduction stages scale sub-linearly (log) with min(m,n), proving why Wallace trees scale better than array multipliers for wide operands.
+* **Statistical Timing Analysis:** Ran exhaustive input simulations to quantify performance rather than relying on theoretical assertions. Computed mean, median, standard deviation, and max delay across multiplier types. Used the mean-vs-median gap and standard deviation to analyze "average-case vs. worst-case" timing predictability across balanced/unbalanced Wallace trees and RCA/CLA final adders.
+* **Custom Mixed-Sign Multiplier:** Designed a specialized multiplier for the FIR datapath where one operand is always positive (post-pre-addition samples) and the other is signed (filter coefficients). Solved the non-trivial partial-product generation problem required when standard unsigned array/Wallace structures fail to handle single-signed operands without modified sign-extension handling.
 
-2. Multiplier design and comparison
+## 3. Custom Timing Methodology
+* **Transistor-Level Delay Extraction:** Eliminated standard uniform gate delay assumptions. Extracted transition-dependent (rise vs. fall) and input-dependent delays directly from custom Cadence Virtuoso transistor-level gate designs.
+* **Accurate RTL Simulation:** Encoded these precise analog delays into structural Verilog using `specify` blocks, ensuring Vivado timing simulations accurately matched real-world transistor behavior. Used this to find true worst-case input vectors via exhaustive simulation.
 
-Array multiplier: built from a CSA chain + final RCA; derived total delay as a function of number of CSA stages and final carry chain.
-Wallace Tree multiplier: implemented column-reduction stages with FAs/HAs down to 2 rows, then a fast adder for row reduction; derived how the number of reduction stages s grows sub-linearly (logarithmically) with min(m,n) — the actual mathematical reason Wallace trees scale better than array multipliers for wide operands.
-Quantified this rather than just asserting it: ran exhaustive input simulations, computed mean/median/std-dev/max delay across multiplier types, and used mean-vs-median gap and standard deviation as evidence for "average-case vs. worst-case" and "timing predictability" trade-offs — with balanced vs. deliberately unbalanced Wallace trees, and RCA vs. CLA as the final adder.
-Custom signed/mixed-sign multiplier (in the FIR project): designed a multiplier where one operand is always positive (samples after pre-addition) and the other can be positive or negative (filter coefficients) — a genuinely non-trivial partial-product generation problem, since standard unsigned array/Wallace structures don't handle a single signed operand correctly without modified partial-product generation or sign-extension handling.
+## 4. Pipelining & Timing Closure
+* **Constraints Analysis:** Derived setup and hold constraints for a two-register pipeline stage containing zero combinational logic between them.
+* **Hold Violation Resolution:** Analyzed why pipelining a fast combinational block (like a multiplier) can inadvertently introduce hold violations while simultaneously improving throughput. Engineered and evaluated three concrete architectural fixes (delay elements, slower source flip-flops, and lockup latches) against their area and power costs.
 
-3. Timing methodology (this is a strong, less-common skill to highlight)
-
-Didn't assume uniform gate delay — extracted transition-dependent (rise vs. fall), input-dependent delays from your own Cadence Virtuoso transistor-level gate designs, and encoded them into structural Verilog using specify blocks so Vivado timing simulation matched real transistor behavior.
-Used this to find true worst-case input vectors by exhaustive simulation rather than assumption.
-
-4. Pipelining and timing closure
-
-Derived setup and hold constraints for a two-register pipeline stage with zero combinational logic between them, and reasoned about why pipelining a fast combinational block (like a multiplier) can introduce hold violations even as it improves throughput — plus three concrete fixes (delay elements, slower source flip-flop, lockup latches) with their area/power costs.
-
-5. FIR filter design and fixed-point DSP
-
-Designed a 15-tap linear-phase low-pass FIR filter from spec (cutoff, stopband attenuation, sampling frequency derivation).
-Chose Q1.7 fixed-point format for coefficients and samples based on actual coefficient range and existing 2's-complement adder/multiplier support; quantified the real effect of quantization on magnitude/phase response and stopband attenuation (not just "there's some error").
-Computed SQNR analytically and verified it in MATLAB across three implementations: ideal (floating point), direct form (finite word length), and an optimized structure.
-Recognized and exploited the filter's structure — alternating zero coefficients + coefficient symmetry — to cut multiplier count from 15 to 5 via pre-addition, identified it as a half-band filter, and derived the practical consequence (output can be resampled at half rate, relaxing DAC requirements).
-Took this to hardware: structural Verilog implementation using your own signed carry-save multipliers and carry-save adders, with overflow saturation logic — connecting the fixed-point/SQNR analysis directly to a working RTL datapath.
+## 5. FIR Filter Design & Fixed-Point DSP
+* **Filter Architecture:** Designed a 15-tap linear-phase low-pass FIR filter from base specifications (cutoff frequency, stopband attenuation, and sampling frequency derivation).
+* **Fixed-Point Quantization:** Selected Q1.7 fixed-point format for coefficients and samples based on actual coefficient ranges and 2's-complement arithmetic support. Quantified the exact degradation of magnitude/phase response and stopband attenuation caused by quantization.
+* **SQNR Verification:** Analytically computed and verified the Signal-to-Quantization-Noise Ratio (SQNR) in MATLAB across three implementation tiers: ideal (floating-point), direct form (finite word length), and structurally optimized.
+* **Hardware Optimization:** Exploited the filter's mathematical properties (alternating zero coefficients and coefficient symmetry) to reduce the required multiplier count from 15 to 5 via pre-addition. Identified the structure as a half-band filter and derived practical system benefits, such as resampling the output at half-rate to relax DAC requirements.
+* **Structural Verilog RTL:** Translated the fixed-point/SQNR analysis into a working physical datapath using custom signed carry-save multipliers, carry-save adders, and overflow saturation logic.
