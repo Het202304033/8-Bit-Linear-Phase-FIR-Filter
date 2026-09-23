@@ -1,5 +1,9 @@
 # 8-Bit Linear-Phase FIR Filter
 
+<img width="637" height="798" alt="image" src="https://github.com/user-attachments/assets/ccab9616-b741-4202-8c87-a4ab73e3b02d" />
+<img width="525" height="290" alt="image" src="https://github.com/user-attachments/assets/92eff79d-6041-4a8d-85a1-830e3a045d56" />
+
+
 ## 1. Adder Architectures: First Principles to Trade-Off Analysis
 * **Full Adder:** Built from basic logic gates, deriving worst-case delay equations (T_sum, T_cout) for generated versus propagated carry to confirm the specific input patterns that trigger the true critical path.
 * **Ripple Carry Adder (RCA):** Derived the linear worst-case delay growth formula (n × T_carry) and identified the exact worst-case vector (11...1 + 00...01 + Cin=1). Connected these theoretical limits to real design consequences, such as the bit-width growth needed for overflow-free sums and the RCA's role as the final carry-propagate stage in multipliers.
