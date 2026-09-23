@@ -30,4 +30,5 @@
 * **Hardware Optimization:** Exploited the filter's mathematical properties (alternating zero coefficients and coefficient symmetry) to reduce the required multiplier count from 15 to 5 via pre-addition. Identified the structure as a half-band filter and derived practical system benefits, such as resampling the output at half-rate to relax DAC requirements.
 * **Structural Verilog RTL:** Translated the fixed-point/SQNR analysis into a working physical datapath using custom signed carry-save multipliers, carry-save adders, and overflow saturation logic.
 
-<img width="637" height="798" alt="image" src="https://github.com/user-attachments/assets/ccab9616-b741-4202-8c87-a4ab73e3b02d" />
+<img width="732" height="754" alt="image" src="https://github.com/user-attachments/assets/45867a6b-2743-4ee0-9d6d-ef3ed5745758" />
+
