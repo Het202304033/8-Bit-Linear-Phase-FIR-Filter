@@ -1,8 +1,6 @@
 # 8-Bit Linear-Phase FIR Filter
 
-<img width="637" height="798" alt="image" src="https://github.com/user-attachments/assets/ccab9616-b741-4202-8c87-a4ab73e3b02d" />
 <img width="525" height="290" alt="image" src="https://github.com/user-attachments/assets/92eff79d-6041-4a8d-85a1-830e3a045d56" />
-
 
 ## 1. Adder Architectures: First Principles to Trade-Off Analysis
 * **Full Adder:** Built from basic logic gates, deriving worst-case delay equations (T_sum, T_cout) for generated versus propagated carry to confirm the specific input patterns that trigger the true critical path.
@@ -31,3 +29,5 @@
 * **SQNR Verification:** Analytically computed and verified the Signal-to-Quantization-Noise Ratio (SQNR) in MATLAB across three implementation tiers: ideal (floating-point), direct form (finite word length), and structurally optimized.
 * **Hardware Optimization:** Exploited the filter's mathematical properties (alternating zero coefficients and coefficient symmetry) to reduce the required multiplier count from 15 to 5 via pre-addition. Identified the structure as a half-band filter and derived practical system benefits, such as resampling the output at half-rate to relax DAC requirements.
 * **Structural Verilog RTL:** Translated the fixed-point/SQNR analysis into a working physical datapath using custom signed carry-save multipliers, carry-save adders, and overflow saturation logic.
+
+<img width="637" height="798" alt="image" src="https://github.com/user-attachments/assets/ccab9616-b741-4202-8c87-a4ab73e3b02d" />
